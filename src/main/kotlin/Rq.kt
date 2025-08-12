@@ -1,44 +1,29 @@
 package com.back
 
-class Rq(cmd: String) {
+class Rq(command: String) {
     val action: String
-    private val paramMap = mutableMapOf<String, String>()
+    private val paramsMap: Map<String, String>
 
     init {
-        val cmdBits = cmd.split("?", limit = 2)
+        val commandBits = command.split("?", limit = 2)
+        action = commandBits[0].trim()
 
-        action = cmdBits[0].trim()
-
-        if (cmdBits.size == 2) {
-            val queryStr = cmdBits[1]
-            val queryBits = queryStr.split("&")
-
-            for (queryBit in queryBits) {
-                val queryParamBits = queryBit.split("=", limit = 2)
-
-                if (queryParamBits.size != 2) {
-                    continue
-                }
-
-                val paramName = queryParamBits[0].trim()
-                val paramValue = queryParamBits[1].trim()
-
-                paramMap[paramName] = paramValue
+        if (commandBits.size > 1) {
+            val queryString = commandBits[1]
+            paramsMap = queryString.split("&").associate {
+                val (key, value) = it.split("=", limit = 2)
+                key to value
             }
+        } else {
+            paramsMap = emptyMap()
         }
     }
 
-    private fun getParamValue(name: String): String? {
-        return paramMap[name]
+    fun getParamValueAsInt(name: String, defaultValue: Int): Int {
+        return paramsMap[name]?.toIntOrNull() ?: defaultValue
     }
 
-    fun getParamValueAsInt(name: String, default: Int): Int {
-        val paramValue = getParamValue(name) ?: return default
-
-        return try {
-            paramValue.toInt()
-        } catch (e: NumberFormatException) {
-            default
-        }
+    fun getParamValue(name: String, defaultValue: String): String {
+        return paramsMap[name] ?: defaultValue
     }
 }
